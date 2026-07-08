@@ -249,9 +249,61 @@
       const span = document.createElement('span');
       span.className = 'heading-char';
       span.textContent = char === ' ' ? '\u00A0' : char;
-      span.style.animationDelay = `${i * 0.05}s`;
+      span.style.animationDelay = `${i * 0.07}s`;
       heading.appendChild(span);
+
+      // Skip sparkle burst for space characters only
+      if (char === ' ' || char === '\u00A0') return;
+
+      // Sparkle burst appears when this character reaches its peak (35% into 0.8s animation)
+      createSparkleBurst(span, i);
     });
+  }
+
+  // Creates a golden sparkle burst at a character's position
+  function createSparkleBurst(container, charIndex) {
+    if (CONFIG.reducedMotion) return;
+
+    const burst = document.createElement('div');
+    burst.className = 'heading-sparkle';
+
+    const baseDelay = charIndex * 0.07 + 0.28;
+    const particleCount = 6 + Math.floor(Math.random() * 4); // 6-9 particles
+    const colors = ['#F3D58C', '#FAE8A0', '#FFE44D', '#FFF5CC', '#FFFFFF'];
+
+    for (let i = 0; i < particleCount; i++) {
+      const p = document.createElement('div');
+      p.className = 'heading-sparkle-particle';
+
+      const size = 2 + Math.random() * 3;
+      p.style.width = `${size}px`;
+      p.style.height = `${size}px`;
+
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      p.style.background = color;
+      p.style.boxShadow = `0 0 ${4 + Math.random() * 4}px ${color}`;
+
+      // Random scatter direction, biased upward
+      const angle = Math.random() * Math.PI * 2;
+      const distance = 14 + Math.random() * 26;
+      const sx = Math.cos(angle) * distance;
+      const sy = Math.sin(angle) * distance - 10;
+      p.style.setProperty('--sx', `${sx}px`);
+      p.style.setProperty('--sy', `${sy}px`);
+
+      p.style.setProperty('--dur', `${0.35 + Math.random() * 0.35}s`);
+      p.style.animationDelay = `${baseDelay + Math.random() * 0.15}s`;
+
+      burst.appendChild(p);
+    }
+
+    container.appendChild(burst);
+
+    // Clean up after all particles have animated
+    const maxDelay = baseDelay + 0.15 + 0.7;
+    setTimeout(() => {
+      if (burst.parentNode) burst.remove();
+    }, maxDelay * 1000 + 100);
   }
 
   // Typing greeting
@@ -338,6 +390,65 @@
   }
 
   /* ============================================================
+     BLOW WIND & PARTICLES
+     ============================================================ */
+
+  // Creates wind gust lines that sweep across the cake
+  function createBlowGust() {
+    if (CONFIG.reducedMotion) return;
+    const stage = document.querySelector('.gift-stage');
+    if (!stage) return;
+
+    const gust = document.createElement('div');
+    gust.className = 'blow-gust';
+
+    for (let i = 0; i < 10; i++) {
+      const line = document.createElement('div');
+      line.className = 'blow-gust-line';
+      line.style.top = `${20 + Math.random() * 60}%`;
+      line.style.width = `${50 + Math.random() * 90}px`;
+      line.style.animationDelay = `${Math.random() * 0.2}s`;
+      const tilt = (Math.random() - 0.5) * 20;
+      line.style.setProperty('--tilt', `${tilt}deg`);
+      gust.appendChild(line);
+    }
+
+    stage.appendChild(gust);
+    setTimeout(() => gust.remove(), 1500);
+  }
+
+  // Creates a burst of small particles flying out from the candles
+  function createBlowParticles() {
+    if (CONFIG.reducedMotion) return;
+    const stage = document.querySelector('.gift-stage');
+    if (!stage) return;
+
+    const colors = ['#ff6600', '#ff9900', '#ffe44d', '#fff5cc', '#ffffff', '#ff4400', '#ffcc00'];
+    const count = 35;
+
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement('div');
+      p.className = 'blow-particle';
+      const size = 2 + Math.random() * 6;
+      p.style.width = `${size}px`;
+      p.style.height = `${size}px`;
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      p.style.background = color;
+      p.style.boxShadow = `0 0 ${4 + Math.random() * 4}px ${color}`;
+      p.style.left = `${40 + Math.random() * 20}%`;
+      p.style.top = `${35 + Math.random() * 25}%`;
+      const dx = (Math.random() - 0.5) * 220;
+      const dy = -(40 + Math.random() * 100);
+      p.style.setProperty('--dx', `${dx}px`);
+      p.style.setProperty('--dy', `${dy}px`);
+      p.style.setProperty('--dur', `${0.4 + Math.random() * 0.6}s`);
+      p.style.animationDelay = `${Math.random() * 0.25}s`;
+      stage.appendChild(p);
+      setTimeout(() => p.remove(), 2500);
+    }
+  }
+
+  /* ============================================================
      GIFT & CAKE
      ============================================================ */
   function setupGiftAndCake() {
@@ -384,21 +495,40 @@
         if (state.candlesBlown) return;
         state.candlesBlown = true;
         const candles = document.querySelectorAll('.candle');
+
+        // 1. Wind gust swoosh across the cake
+        createBlowGust();
+
+        // 2. Particle burst from candles
+        createBlowParticles();
+
+        // 3. Stretch flames sideways (wind effect) before extinguishing
         candles.forEach((c, i) => {
-          setTimeout(() => c.classList.add('blown'), i * 100);
+          setTimeout(() => c.classList.add('blowing'), i * 60);
         });
-        // Confetti
+
+        // 4. After wind passes, extinguish candles
+        setTimeout(() => {
+          candles.forEach((c, i) => {
+            c.classList.remove('blowing');
+            setTimeout(() => c.classList.add('blown'), i * 60);
+          });
+        }, 500);
+
+        // Confetti burst after candles are out
         setTimeout(() => {
           const rect = cake.getBoundingClientRect();
           const x = (rect.left + rect.width / 2) / window.innerWidth * 100;
           const y = (rect.top + rect.height / 2) / window.innerHeight * 100;
           burstConfetti(120, x, y);
           setTimeout(() => burstConfetti(60, x, y), 200);
-        }, 400);
-        // Wish text
+        }, 700);
+
+        // Wish text appears
         setTimeout(() => {
           wishText.classList.add('visible');
-        }, 800);
+        }, 1100);
+
         blowBtn.style.opacity = '0.5';
         blowBtn.style.pointerEvents = 'none';
       });
