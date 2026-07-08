@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>A Little Something for You — Manjila</title>
+  <meta name="description" content="A handcrafted birthday celebration." />
+
+  <!-- Tailwind CSS (Official CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="style.css" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['Outfit', 'sans-serif'],
+            body: ['Plus Jakarta Sans', 'sans-serif'],
+            alt: ['Poppins', 'sans-serif'],
+          },
+          colors: {
+            night: '#4A3F4A',
+            royal: '#AFCDE7',
+            indigoDeep: '#AFC8A4',
+            periwinkle: '#F3D58C',
+            violetSoft: '#E6C7E9',
+            gold: '#F3D58C',
+            cream: '#FFF8F0',
+            lavender1: '#E6C7E9',
+            lavender2: '#D4B7D8',
+            muted: '#A8A0B0',
+          }
+        }
+      }
+    }
+  </script>
+</head>
+
+<body class="bg-cream text-night font-body antialiased overflow-x-hidden">
+
+  <!-- ============== PERSISTENT BACKGROUND EFFECTS ============== -->
+  <div id="bgEffects" class="fixed inset-0 z-0 pointer-events-none">
+    <div id="starsLayer" class="absolute inset-0"></div>
+    <div id="shootingStarsLayer" class="absolute inset-0 overflow-hidden"></div>
+    <div id="sparklesLayer" class="absolute inset-0"></div>
+    <div id="balloonsLayer" class="absolute inset-0 overflow-hidden"></div>
+    <div id="confettiLayer" class="absolute inset-0 overflow-hidden"></div>
+    <div class="absolute inset-0 bg-gradient-overlay"></div>
+  </div>
+
+  <!-- ============== MUSIC BUTTON ============== -->
+  <button id="musicBtn" class="music-button" aria-label="Toggle music" title="Play / Pause music">
+    <svg class="icon-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polygon points="5 3 19 12 5 21 5 3"></polygon>
+    </svg>
+    <svg class="icon-pause" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="6" y="4" width="4" height="16"></rect>
+      <rect x="14" y="4" width="4" height="16"></rect>
+    </svg>
+    <span class="music-ring"></span>
+  </button>
+
+  <!-- ============================================================= -->
+  <!-- SECTION 1 — THE DOOR                                          -->
+  <!-- ============================================================= -->
+  <header id="screenDoor" class="screen active" aria-label="Entrance">
+    <div class="screen-inner min-h-screen flex flex-col items-center justify-center px-6">
+
+      <p class="door-pretitle reveal-on-load">Someone has something special for you...</p>
+
+      <div class="door-scene mt-10">
+        <div class="door-glow"></div>
+        <div class="door-frame" id="doorFrame">
+          <div class="door-arch-cover"></div>
+          <div class="door" id="door" role="button" tabindex="0" aria-label="Open the door to enter">
+            <div class="door-panel panel-top"></div>
+            <div class="door-panel panel-bottom"></div>
+            <div class="door-handle"></div>
+            <div class="door-grain"></div>
+          </div>
+          <div class="door-light-leak"></div>
+        </div>
+      </div>
+
+      <p class="door-hint mt-10 reveal-on-load">Click the door to enter</p>
+
+      <div class="door-floor"></div>
+    </div>
+  </header>
+
+  <!-- ============================================================= -->
+  <!-- SECTION 2 — PERSONAL INVITATION                               -->
+  <!-- ============================================================= -->
+  <section id="screenInvite" class="screen" aria-label="Personal invitation">
+    <div class="screen-inner min-h-screen flex items-center justify-center px-6 py-16">
+      <article class="invite-card glass">
+        <div class="invite-ornament">
+          <span></span><span></span><span></span>
+        </div>
+
+        <p class="invite-eyebrow">A small note</p>
+        <h2 class="invite-title">Hi Manjila,</h2>
+
+        <div class="invite-message">
+          <p>I know we haven't known each other for very long, but I've really enjoyed getting to know you. Our conversations feel natural, and I like how comfortably things have progressed between us.</p>
+          <p>Today is your birthday — a very special day! 🎉 I was wondering if you'd like to grab a coffee or go for a walk sometime to celebrate. No pressure at all if you're already busy — just thought I'd put it out there.</p>
+        </div>
+
+        <div class="invite-action-wrap">
+          <button id="inviteContinue" class="invite-button">
+            <span>Continue</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </button>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============================================================= -->
+  <!-- SECTION 3 — BIRTHDAY CELEBRATION (SCROLLABLE)                 -->
+  <!-- ============================================================= -->
+  <main id="screenCelebration" class="celebration">
+
+    <!-- ============== HERO ============== -->
+    <section class="hero-section relative min-h-screen flex flex-col items-center justify-center px-6 text-center">
+      <div class="hero-glow"></div>
+      <h1 class="hero-heading" id="heroHeading" aria-label="Happy Birthday">🎉 Happy Birthday 🎉</h1>
+      <div class="hero-divider"></div>
+      <p class="typing-text" aria-live="polite">
+        <span id="typingContent"></span><span class="typing-cursor" aria-hidden="true"></span>
+      </p>
+      <div class="hero-scroll-hint">
+        <span>Scroll to continue</span>
+        <span class="scroll-arrow"></span>
+      </div>
+    </section>
+
+    <!-- ============== DEDICATED BIRTHDAY WISH ============== -->
+    <section class="wish-section py-24 px-6">
+      <article class="wish-card glass reveal fade-up">
+        <div class="wish-ornament">
+          <svg viewBox="0 0 60 60" fill="none" stroke="currentColor" stroke-width="1.2">
+            <circle cx="30" cy="30" r="22" stroke-dasharray="2 4"></circle>
+            <circle cx="30" cy="30" r="3" fill="currentColor"></circle>
+          </svg>
+        </div>
+        <p class="wish-eyebrow">A wish for you</p>
+        <h2 class="wish-name">Happy Birthday, Manjila Shrestha</h2>
+        <p class="wish-subtitle">Architect &amp; Interior Designer</p>
+
+        <div class="wish-message">
+          <p>Dear Manjila,</p>
+          <p>On your special day, I want to take a quiet moment to celebrate you — the person, the friend, and the creative mind behind every space you shape.</p>
+          <p>May this year bring you happiness that lingers, health that sustains you, and success that feels truly earned. May your imagination keep stretching boundaries, your projects keep inspiring people, and every milestone you cross feel meaningful.</p>
+          <p>Thank you for being such a wonderful friend. Your kindness, your thoughtfulness, and the calm you bring into conversations mean more than words can say.</p>
+          <p>Keep creating beautiful spaces. Keep growing. Keep shining.</p>
+          <p class="wish-signature">— With warmth and appreciation</p>
+        </div>
+      </article>
+    </section>
+
+    <!-- ============== GIFT & CAKE ============== -->
+    <section class="gift-section py-24 px-6">
+      <h2 class="section-heading reveal fade-up">A Little Surprise</h2>
+      <p class="section-subtext reveal fade-up">Tap the gift to open it.</p>
+
+      <div class="gift-stage reveal scale-in">
+        <div class="gift-container" id="giftContainer" role="button" tabindex="0" aria-label="Open the gift">
+          <div class="gift-shadow"></div>
+          <div class="gift-base"></div>
+          <div class="gift-ribbon-h"></div>
+          <div class="gift-ribbon-v"></div>
+          <div class="gift-lid"></div>
+          <div class="gift-bow">
+            <span></span><span></span><span class="bow-knot"></span>
+          </div>
+          <div class="gift-shine"></div>
+        </div>
+
+        <div class="cake-container" id="cakeContainer" aria-hidden="true">
+          <div class="cake">
+            <div class="candles">
+              <div class="candle"><div class="flame"></div><div class="smoke"></div></div>
+              <div class="candle"><div class="flame"></div><div class="smoke"></div></div>
+              <div class="candle"><div class="flame"></div><div class="smoke"></div></div>
+            </div>
+            <div class="cake-layer cake-top"></div>
+            <div class="cake-layer cake-mid"></div>
+            <div class="cake-layer cake-bot"></div>
+            <div class="cake-plate"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="gift-action-wrap">
+        <button id="blowCandlesBtn" class="primary-button" aria-label="Blow out the candles">
+          <span class="btn-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12c4-3 8-3 12 0 2 1.5 4 1.5 6 0"></path>
+              <path d="M3 17c4-3 8-3 12 0 2 1.5 4 1.5 6 0"></path>
+            </svg>
+          </span>
+          <span>Blow Candles</span>
+        </button>
+        <p id="wishText" class="wish-text">Make a wish ✨</p>
+      </div>
+    </section>
+
+    <!-- ============== MEMORIES ============== -->
+    <section class="memories-section py-24 px-6">
+      <h2 class="section-heading reveal fade-up">Shared Moments</h2>
+
+      <div class="memories-intro reveal fade-up">
+        <p>These were the only photographs available, kindly shared by <strong>Sharda Aunty</strong>.</p>
+        <p>Since the original images were fairly low in resolution, AI upscaling was used carefully to improve their clarity while preserving the original memories as faithfully as possible.</p>
+        <p>Although they may not be perfect, they capture meaningful moments that are worth remembering and celebrating.</p>
+      </div>
+
+      <div class="gallery-grid">
+        <figure class="gallery-item reveal fade-up" data-index="0">
+          <div class="gallery-fallback"></div>
+          <img src="imageone.PNG" alt="A shared memory" loading="lazy" />
+          <div class="gallery-hover-glow"></div>
+        </figure>
+        <figure class="gallery-item reveal fade-up" data-index="1" style="transition-delay: 0.1s">
+          <div class="gallery-fallback"></div>
+          <img src="imagetwo.PNG" alt="A shared memory" loading="lazy" />
+          <div class="gallery-hover-glow"></div>
+        </figure>
+        <figure class="gallery-item reveal fade-up" data-index="2" style="transition-delay: 0.2s">
+          <div class="gallery-fallback"></div>
+          <img src="imagethree.PNG" alt="A shared memory" loading="lazy" />
+          <div class="gallery-hover-glow"></div>
+        </figure>
+      </div>
+    </section>
+
+    <!-- ============== FINAL FRIENDSHIP MESSAGE ============== -->
+    <section class="final-section py-24 px-6">
+      <article class="final-card glass reveal fade-up" id="finalCard">
+        <button class="final-toggle" id="finalToggle" aria-expanded="false" aria-controls="finalContent">
+          <span class="final-title">One More Thing...</span>
+          <span class="toggle-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </span>
+        </button>
+        <div class="final-content" id="finalContent">
+          <div class="final-content-inner">
+            <p>No matter where life takes us,</p>
+            <p>I hope we continue sharing meaningful conversations, creating new memories, supporting one another, and celebrating milestones together.</p>
+            <p>Thank you for being such a wonderful friend.</p>
+            <p>Happy Birthday once again.</p>
+            <p>Stay happy, stay healthy, keep smiling, and keep creating beautiful spaces for the world through your creativity.</p>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <!-- ============== ENDING ============== -->
+    <footer class="ending-section py-24 px-6 text-center">
+      <p class="ending-text reveal fade-in">Made just for you.</p>
+      <div class="ending-stars" id="endingStars"></div>
+      <div class="ending-glow"></div>
+    </footer>
+
+  </main>
+
+  <!-- ============== GALLERY MODAL ============== -->
+  <div id="galleryModal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="Photo viewer">
+    <button class="modal-close" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+    <div class="modal-content">
+      <img id="modalImg" src="" alt="Full size memory" />
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
