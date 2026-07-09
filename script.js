@@ -211,6 +211,12 @@
       if (toId === 'screenCelebration') {
         // Move scroll to top
         window.scrollTo({ top: 0, behavior: 'auto' });
+        // Hide the previous fixed-position screens to prevent mobile scroll conflicts
+        setTimeout(() => {
+          from.style.display = 'none';
+          const door = document.getElementById('screenDoor');
+          if (door) door.style.display = 'none';
+        }, 500);
       }
       if (callback) setTimeout(callback, 400);
     }, 800);
@@ -230,6 +236,9 @@
 
     // Balloons
     createBalloons();
+
+    // Create scroll indicators between sections
+    createSectionIndicators();
 
     // Hero heading letter animation
     setTimeout(() => animateHeading(), 200);
@@ -448,6 +457,52 @@
     }
   }
 
+  // Creates additional floating smoke puffs for a more voluminous effect
+  function createExtraSmoke() {
+    if (CONFIG.reducedMotion) return;
+    const stage = document.querySelector('.gift-stage');
+    if (!stage) return;
+
+    const count = 14;
+    for (let i = 0; i < count; i++) {
+      const puff = document.createElement('div');
+      const size = 18 + Math.random() * 34;
+      puff.style.cssText = `
+        position: absolute;
+        width: ${size}px;
+        height: ${size}px;
+        background: radial-gradient(circle at 40% 40%, rgba(210,210,210,0.65), rgba(190,190,190,0.25), transparent);
+        border-radius: 50%;
+        filter: blur(${6 + Math.random() * 8}px);
+        pointer-events: none;
+        z-index: 12;
+        left: ${36 + Math.random() * 28}%;
+        top: ${28 + Math.random() * 24}%;
+      `;
+
+      const dx = (Math.random() - 0.5) * 140;
+      const dy = -(50 + Math.random() * 130);
+      const dur = 2.2 + Math.random() * 2.4;
+      const delay = Math.random() * 0.6;
+
+      puff.animate([
+        { opacity: 0, transform: 'translate(0, 0) scale(0.3)' },
+        { opacity: 0.65, transform: `translate(${dx * 0.2}px, ${dy * 0.2}px) scale(1.2)`, offset: 0.12 },
+        { opacity: 0.45, transform: `translate(${dx * 0.45}px, ${dy * 0.5}px) scale(2.4)`, offset: 0.4 },
+        { opacity: 0.2, transform: `translate(${dx * 0.7}px, ${dy * 0.8}px) scale(3.8)`, offset: 0.7 },
+        { opacity: 0, transform: `translate(${dx}px, ${dy}px) scale(5.5)` }
+      ], {
+        duration: dur * 1000,
+        delay: delay * 1000,
+        easing: 'ease-out',
+        fill: 'forwards'
+      });
+
+      stage.appendChild(puff);
+      setTimeout(() => puff.remove(), (dur + delay + 0.5) * 1000);
+    }
+  }
+
   /* ============================================================
      GIFT & CAKE
      ============================================================ */
@@ -499,15 +554,18 @@
         // 1. Wind gust swoosh across the cake
         createBlowGust();
 
-        // 2. Particle burst from candles
+        // 2. Extra floating smoke puffs for pronounced volume
+        createExtraSmoke();
+
+        // 3. Particle burst from candles
         createBlowParticles();
 
-        // 3. Stretch flames sideways (wind effect) before extinguishing
+        // 4. Stretch flames sideways (wind effect) before extinguishing
         candles.forEach((c, i) => {
           setTimeout(() => c.classList.add('blowing'), i * 60);
         });
 
-        // 4. After wind passes, extinguish candles
+        // 5. After wind passes, extinguish candles
         setTimeout(() => {
           candles.forEach((c, i) => {
             c.classList.remove('blowing');
@@ -605,6 +663,93 @@
     });
 
     reveals.forEach(el => observer.observe(el));
+  }
+
+  /* ============================================================
+     SCROLL INDICATORS
+     ============================================================ */
+  function createSectionIndicators() {
+    const celebration = document.getElementById('screenCelebration');
+    if (!celebration) return;
+
+    // All sections that should get a scroll indicator after them
+    const sectionSelector = '.hero-section, .wish-section, .gift-section, .memories-section, .final-section';
+    const sections = celebration.querySelectorAll(sectionSelector);
+    if (!sections.length) return;
+
+    const indicators = [];
+
+    sections.forEach((section) => {
+      const indicator = document.createElement('div');
+      indicator.className = 'section-indicator';
+
+      const dot = document.createElement('div');
+      dot.className = 'section-indicator-dot';
+
+      const arrow = document.createElement('div');
+      arrow.className = 'section-indicator-arrow';
+
+      indicator.appendChild(dot);
+      indicator.appendChild(arrow);
+
+      // Insert after the current section
+      section.parentNode.insertBefore(indicator, section.nextSibling);
+      indicators.push(indicator);
+
+      // Observe the indicator to toggle visibility via IntersectionObserver
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            updateIndicatorVisibility(indicator);
+          } else {
+            indicator.classList.remove('visible');
+          }
+        });
+      }, {
+        threshold: 0,
+        rootMargin: '0px 0px -30px 0px'
+      });
+
+      observer.observe(indicator);
+    });
+
+    // Single consolidated scroll listener to fade indicators near the bottom
+    const updateIndicatorVisibility = (indicator) => {
+      const ending = document.querySelector('.ending-section');
+      if (!ending) {
+        indicator.classList.add('visible');
+        return;
+      }
+      const endingRect = ending.getBoundingClientRect();
+      const vh = window.innerHeight;
+
+      if (endingRect.top < vh + 200) {
+        indicator.classList.remove('visible');
+        indicator.classList.add('fade-end');
+      } else {
+        indicator.classList.add('visible');
+        indicator.classList.remove('fade-end');
+      }
+    };
+
+    const refreshAllIndicators = () => {
+      indicators.forEach(ind => {
+        if (ind.classList.contains('fade-end') || ind.classList.contains('visible')) {
+          updateIndicatorVisibility(ind);
+        }
+      });
+    };
+
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          refreshAllIndicators();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }, { passive: true });
   }
 
   /* ============================================================
