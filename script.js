@@ -26,14 +26,6 @@
     candlesBlown: false,
   };
 
-  /* ---------- iOS Chrome viewport lock ---------- */
-  function lockViewport() {
-    const meta = document.querySelector('meta[name="viewport"]');
-    if (meta) {
-      meta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
-    }
-  }
-
   /* ---------- DOM Ready ---------- */
   document.addEventListener('DOMContentLoaded', init);
 
@@ -50,13 +42,6 @@
     createEndingStars();
     setupGiftAndCake();
     setupParallax();
-
-    // Prevent iOS Chrome viewport zoom issues on scroll
-    let viewportLockTimer;
-    window.addEventListener('scroll', () => {
-      clearTimeout(viewportLockTimer);
-      viewportLockTimer = setTimeout(lockViewport, 200);
-    }, { passive: true });
   }
 
   /* ============================================================
@@ -226,7 +211,6 @@
       if (toId === 'screenCelebration') {
         // Move scroll to top
         window.scrollTo({ top: 0, behavior: 'auto' });
-        lockViewport();
         // Hide the previous fixed-position screens to prevent mobile scroll conflicts
         setTimeout(() => {
           from.style.display = 'none';
@@ -601,7 +585,6 @@
         // Wish text appears
         setTimeout(() => {
           wishText.classList.add('visible');
-          lockViewport();
         }, 1100);
 
         blowBtn.style.opacity = '0.5';

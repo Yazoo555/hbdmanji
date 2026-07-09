@@ -47,9 +47,14 @@ body {
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  overflow-x: hidden;
+  width: 100%;
 }
 button, [role="button"], a {
   touch-action: manipulation;
+}
+#bgEffects {
+  overflow: hidden;
 }
 .bg-gradient-overlay {
   background:
@@ -555,7 +560,7 @@ button, [role="button"], a {
    ============================================================ */
 
 /* Hero */
-.hero-section { position: relative; }
+.hero-section { position: relative; padding-bottom: 6rem; }
 .hero-glow {
   position: absolute;
   top: 50%;
