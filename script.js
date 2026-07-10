@@ -7,12 +7,15 @@
   'use strict';
 
   /* ---------- Configuration ---------- */
+  const isMobile = window.matchMedia('(max-width: 640px)').matches;
   const CONFIG = {
-    starCount: 90,
-    sparkleCount: 25,
-    balloonCount: 10,
+    starCount: isMobile ? 40 : 90,
+    sparkleCount: isMobile ? 12 : 25,
+    balloonCount: isMobile ? 6 : 10,
     balloonColors: ['#AFCDE7', '#AFC8A4', '#F3D58C', '#E6C7E9', '#FAE8A0', '#D4B7D8'],
-    shootingStarInterval: 4000,
+    shootingStarInterval: isMobile ? 6500 : 4000,
+    balloonSpawnInterval: isMobile ? 4000 : 2000,
+    maxConcurrentBalloons: isMobile ? 8 : 16,
     typingSpeed: 28,
     reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
   };
@@ -109,8 +112,14 @@
     for (let i = 0; i < CONFIG.balloonCount; i++) {
       spawnBalloon(layer, i * 500);
     }
-    // Keep spawning
-    setInterval(() => spawnBalloon(layer, 0), 2000);
+    // Keep spawning, but cap how many are alive at once and skip a spawn
+    // while the tab is hidden so we're not doing pointless work in the
+    // background (and don't cause a burst of catch-up animation on return).
+    setInterval(() => {
+      if (document.hidden) return;
+      if (layer.childElementCount >= CONFIG.maxConcurrentBalloons) return;
+      spawnBalloon(layer, 0);
+    }, CONFIG.balloonSpawnInterval);
   }
 
   function spawnBalloon(layer, delay) {
@@ -653,8 +662,22 @@
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
-          entry.target.classList.add('in-view');
-          observer.unobserve(entry.target);
+          const el = entry.target;
+          el.classList.add('in-view');
+          observer.unobserve(el);
+          // Once the reveal transition finishes, drop the will-change hint so
+          // the browser can release the compositing layer. Leaving will-change
+          // on indefinitely across many sections is a common cause of
+          // intermittent scroll stutter on mid-range mobile GPUs.
+          const releaseLayer = (e) => {
+            if (e.target !== el) return;
+            el.style.willChange = 'auto';
+            el.removeEventListener('transitionend', releaseLayer);
+          };
+          el.addEventListener('transitionend', releaseLayer);
+          // Safety net in case transitionend doesn't fire (e.g. element never
+          // actually changed, or reduced-motion shortened the transition).
+          setTimeout(() => { el.style.willChange = 'auto'; }, 900);
         }
       });
     }, {
