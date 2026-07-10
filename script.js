@@ -14,8 +14,6 @@
     balloonCount: isMobile ? 6 : 10,
     balloonColors: ['#AFCDE7', '#AFC8A4', '#F3D58C', '#E6C7E9', '#FAE8A0', '#D4B7D8'],
     shootingStarInterval: isMobile ? 6500 : 4000,
-    balloonSpawnInterval: isMobile ? 4000 : 2000,
-    maxConcurrentBalloons: isMobile ? 8 : 16,
     typingSpeed: 28,
     reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
   };
@@ -45,6 +43,8 @@
     createEndingStars();
     setupGiftAndCake();
     setupParallax();
+    setupBackgroundAnimationPausing();
+    setupEndingStarsPausing();
   }
 
   /* ============================================================
@@ -105,37 +105,46 @@
     setTimeout(spawn, 800);
   }
 
-  // Balloons (only after celebration starts)
+  // Balloons (only after celebration starts). Rather than spawning new
+  // balloons forever on a timer (which can only ever grow the workload),
+  // each balloon replaces itself once its own flight finishes — the total
+  // population stays fixed at CONFIG.balloonCount.
   function createBalloons() {
     const layer = document.getElementById('balloonsLayer');
     if (!layer) return;
     for (let i = 0; i < CONFIG.balloonCount; i++) {
-      spawnBalloon(layer, i * 500);
+      spawnBalloon(layer, i * 500, true);
     }
-    // Keep spawning, but cap how many are alive at once and skip a spawn
-    // while the tab is hidden so we're not doing pointless work in the
-    // background (and don't cause a burst of catch-up animation on return).
-    setInterval(() => {
-      if (document.hidden) return;
-      if (layer.childElementCount >= CONFIG.maxConcurrentBalloons) return;
-      spawnBalloon(layer, 0);
-    }, CONFIG.balloonSpawnInterval);
   }
 
-  function spawnBalloon(layer, delay) {
+  function spawnBalloon(layer, delay, recycle) {
     const balloon = document.createElement('div');
     balloon.className = 'balloon';
     const color = CONFIG.balloonColors[Math.floor(Math.random() * CONFIG.balloonColors.length)];
     const size = 30 + Math.random() * 30;
+    const durSeconds = 12 + Math.random() * 8;
     balloon.style.width = `${size}px`;
     balloon.style.height = `${size * 1.2}px`;
     balloon.style.left = `${Math.random() * 100}%`;
     balloon.style.background = `radial-gradient(circle at 30% 30%, ${color}aa, ${color} 60%, ${color}88)`;
     balloon.style.setProperty('--balloon-color', color);
-    balloon.style.setProperty('--dur', `${12 + Math.random() * 8}s`);
+    balloon.style.setProperty('--dur', `${durSeconds}s`);
     balloon.style.setProperty('--delay', `${delay / 1000}s`);
     layer.appendChild(balloon);
-    setTimeout(() => balloon.remove(), 22000 + delay);
+
+    const cleanupAndMaybeRecycle = () => {
+      balloon.removeEventListener('animationend', cleanupAndMaybeRecycle);
+      balloon.remove();
+      if (recycle) {
+        // Small random pause before the next one floats up, so the layer
+        // doesn't look mechanically synchronized.
+        setTimeout(() => spawnBalloon(layer, 0, true), 600 + Math.random() * 1400);
+      }
+    };
+    balloon.addEventListener('animationend', cleanupAndMaybeRecycle);
+    // Fallback in case animationend doesn't fire for some reason (e.g. the
+    // element gets hidden mid-flight on some browsers).
+    setTimeout(cleanupAndMaybeRecycle, durSeconds * 1000 + delay + 1000);
   }
 
   // Confetti burst
@@ -791,6 +800,55 @@
       star.style.setProperty('--delay', `${Math.random() * 2}s`);
       container.appendChild(star);
     }
+  }
+
+  /* ============================================================
+     PERFORMANCE: PAUSE DECORATIVE ANIMATIONS
+     ============================================================ */
+  // Stars/sparkles/balloons sit in a fixed full-viewport layer, so they're
+  // always "visible" and can't be paused just by scrolling them off-screen.
+  // Instead we pause them for the duration of an active scroll gesture (when
+  // the main thread is most contended and any dropped frames are most
+  // noticeable as "stuck" scrolling) and while the tab isn't visible.
+  function setupBackgroundAnimationPausing() {
+    const bg = document.getElementById('bgEffects');
+    if (!bg) return;
+
+    let scrollTimer = null;
+
+    const pause = () => bg.classList.add('bg-effects-paused');
+    const resume = () => {
+      if (!document.hidden) bg.classList.remove('bg-effects-paused');
+    };
+
+    window.addEventListener('scroll', () => {
+      pause();
+      clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(resume, 220);
+    }, { passive: true });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        pause();
+      } else if (!scrollTimer) {
+        resume();
+      }
+    });
+  }
+
+  // Ending-page stars live in normal document flow near the bottom of the
+  // page, so they genuinely go off-screen while the user is reading earlier
+  // sections — pause them until they actually scroll into view.
+  function setupEndingStarsPausing() {
+    const container = document.getElementById('endingStars');
+    if (!container) return;
+    container.classList.add('paused');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        container.classList.toggle('paused', !entry.isIntersecting);
+      });
+    }, { threshold: 0, rootMargin: '200px 0px' });
+    observer.observe(container);
   }
 
   /* ============================================================
