@@ -9,13 +9,17 @@
   /* ---------- Configuration ---------- */
   const isMobile = window.matchMedia('(max-width: 640px)').matches;
   const CONFIG = {
-    starCount: isMobile ? 40 : 90,
-    sparkleCount: isMobile ? 12 : 25,
-    balloonCount: isMobile ? 6 : 10,
+    // On mobile the starfield is a single static CSS layer (see
+    // createStars), so starCount/sparkleCount no longer control per-element
+    // DOM animation there — sparkles are dropped entirely on mobile.
+    starCount: isMobile ? 0 : 90,
+    sparkleCount: isMobile ? 0 : 25,
+    balloonCount: isMobile ? 3 : 10,
     balloonColors: ['#AFCDE7', '#AFC8A4', '#F3D58C', '#E6C7E9', '#FAE8A0', '#D4B7D8'],
-    shootingStarInterval: isMobile ? 6500 : 4000,
+    shootingStarInterval: isMobile ? 9000 : 4000,
     typingSpeed: 28,
     reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    isMobile,
   };
 
   /* ---------- State ---------- */
@@ -55,6 +59,14 @@
   function createStars() {
     const layer = document.getElementById('starsLayer');
     if (!layer) return;
+    if (isMobile) {
+      // Extremely lightweight mode: a single static CSS starfield (defined
+      // in style.css) instead of 40-90 individually-animated DOM nodes.
+      // This is one composited layer with, at most, one gentle opacity
+      // animation — negligible ongoing cost.
+      layer.classList.add('static-field');
+      return;
+    }
     const frag = document.createDocumentFragment();
     for (let i = 0; i < CONFIG.starCount; i++) {
       const star = document.createElement('div');
@@ -71,10 +83,10 @@
     layer.appendChild(frag);
   }
 
-  // Sparkles
+  // Sparkles (skipped entirely on mobile — see CONFIG.sparkleCount)
   function createSparkles() {
     const layer = document.getElementById('sparklesLayer');
-    if (!layer) return;
+    if (!layer || CONFIG.sparkleCount === 0) return;
     const frag = document.createDocumentFragment();
     for (let i = 0; i < CONFIG.sparkleCount; i++) {
       const s = document.createElement('div');
@@ -151,6 +163,10 @@
   function burstConfetti(count = 80, originX = 50, originY = 30) {
     const layer = document.getElementById('confettiLayer');
     if (!layer) return;
+    // Confetti bursts are brief, but on a low-end GPU a big particle burst
+    // can still cause a visible stutter right as it fires — scale it down
+    // on mobile rather than dropping it entirely.
+    if (isMobile) count = Math.round(count * 0.4);
     const colors = ['#AFCDE7', '#AFC8A4', '#F3D58C', '#E6C7E9', '#FFF8F0', '#FAE8A0', '#D4B7D8'];
     for (let i = 0; i < count; i++) {
       const c = document.createElement('div');
@@ -791,6 +807,10 @@
   function createEndingStars() {
     const container = document.getElementById('endingStars');
     if (!container) return;
+    if (isMobile) {
+      container.classList.add('static-field');
+      return;
+    }
     for (let i = 0; i < 25; i++) {
       const star = document.createElement('div');
       star.className = 'ending-star';
