@@ -264,9 +264,13 @@
     state.celebrationStarted = true;
 
     // Confetti burst
-    burstConfetti(120, 50, 20);
-    setTimeout(() => burstConfetti(80, 30, 40), 400);
-    setTimeout(() => burstConfetti(80, 70, 40), 800);
+    if (isMobile) {
+      burstConfetti(40, 50, 20);
+    } else {
+      burstConfetti(120, 50, 20);
+      setTimeout(() => burstConfetti(80, 30, 40), 400);
+      setTimeout(() => burstConfetti(80, 70, 40), 800);
+    }
 
     // Balloons
     createBalloons();
@@ -290,16 +294,19 @@
     const chars = Array.from(text);
     chars.forEach((char, i) => {
       const span = document.createElement('span');
-      span.className = 'heading-char';
+      // On mobile use a simpler class that fades in with no transform/blur
+      // so we don't create a compositing layer per character
+      span.className = isMobile ? 'heading-char-simple' : 'heading-char';
       span.textContent = char === ' ' ? '\u00A0' : char;
       span.style.animationDelay = `${i * 0.07}s`;
       heading.appendChild(span);
 
-      // Skip sparkle burst for space characters only
-      if (char === ' ' || char === '\u00A0') return;
-
-      // Sparkle burst appears when this character reaches its peak (35% into 0.8s animation)
-      createSparkleBurst(span, i);
+      // Sparkle bursts: skip on mobile entirely — each burst spawns 6-9
+      // more DOM nodes per character, so across 20+ chars that's 120-180
+      // quickly-created/destroyed animated elements at the worst moment
+      if (!isMobile && char !== ' ' && char !== '\u00A0') {
+        createSparkleBurst(span, i);
+      }
     });
   }
 
@@ -555,8 +562,12 @@
       const rect = gift.getBoundingClientRect();
       const x = (rect.left + rect.width / 2) / window.innerWidth * 100;
       const y = (rect.top + rect.height / 2) / window.innerHeight * 100;
-      burstConfetti(100, x, y);
-      setTimeout(() => burstConfetti(60, x, y), 200);
+      if (isMobile) {
+        burstConfetti(30, x, y);
+      } else {
+        burstConfetti(100, x, y);
+        setTimeout(() => burstConfetti(60, x, y), 200);
+      }
 
       // Reveal cake
       setTimeout(() => {
@@ -585,38 +596,50 @@
         state.candlesBlown = true;
         const candles = document.querySelectorAll('.candle');
 
-        // 1. Wind gust swoosh across the cake
-        createBlowGust();
-
-        // 2. Extra floating smoke puffs for pronounced volume
-        createExtraSmoke();
-
-        // 3. Particle burst from candles
-        createBlowParticles();
-
-        // 4. Stretch flames sideways (wind effect) before extinguishing
-        candles.forEach((c, i) => {
-          setTimeout(() => c.classList.add('blowing'), i * 60);
-        });
-
-        // 5. After wind passes, extinguish candles
-        setTimeout(() => {
-          candles.forEach((c, i) => {
-            c.classList.remove('blowing');
-            setTimeout(() => c.classList.add('blown'), i * 60);
-          });
-        }, 500);
-
-        // Confetti burst after candles are out
-        setTimeout(() => {
+        if (isMobile) {
+          // Lightweight path: just blow out the candles and fire one small
+          // confetti burst. Skip the gust lines (10 nodes), smoke puffs
+          // (14 blurred/animated elements), and spark particles (35 nodes).
+          candles.forEach((c, i) => setTimeout(() => c.classList.add('blown'), i * 80));
           const rect = cake.getBoundingClientRect();
           const x = (rect.left + rect.width / 2) / window.innerWidth * 100;
           const y = (rect.top + rect.height / 2) / window.innerHeight * 100;
-          burstConfetti(120, x, y);
-          setTimeout(() => burstConfetti(60, x, y), 200);
-        }, 700);
+          setTimeout(() => burstConfetti(30, x, y), 300);
+        } else {
+          // Full desktop experience
+          // 1. Wind gust swoosh across the cake
+          createBlowGust();
 
-        // Wish text appears
+          // 2. Extra floating smoke puffs for pronounced volume
+          createExtraSmoke();
+
+          // 3. Particle burst from candles
+          createBlowParticles();
+
+          // 4. Stretch flames sideways (wind effect) before extinguishing
+          candles.forEach((c, i) => {
+            setTimeout(() => c.classList.add('blowing'), i * 60);
+          });
+
+          // 5. After wind passes, extinguish candles
+          setTimeout(() => {
+            candles.forEach((c, i) => {
+              c.classList.remove('blowing');
+              setTimeout(() => c.classList.add('blown'), i * 60);
+            });
+          }, 500);
+
+          // Confetti burst after candles are out
+          setTimeout(() => {
+            const rect = cake.getBoundingClientRect();
+            const x = (rect.left + rect.width / 2) / window.innerWidth * 100;
+            const y = (rect.top + rect.height / 2) / window.innerHeight * 100;
+            burstConfetti(120, x, y);
+            setTimeout(() => burstConfetti(60, x, y), 200);
+          }, 700);
+        }
+
+        // Wish text appears (both paths)
         setTimeout(() => {
           wishText.classList.add('visible');
         }, 1100);

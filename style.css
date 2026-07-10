@@ -682,6 +682,20 @@ button, [role="button"], a {
     0 0 40px rgba(175, 205, 231, 0);
 }
 
+/* Mobile variant: plain opacity fade-in with a tiny upward drift only.
+   No blur, no rotateX, no scale — avoids creating a compositing layer
+   per character (20+ layers across the heading title) and skips the
+   sparkle particle bursts that normally accompany each character. */
+.heading-char-simple {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(16px);
+  animation: charRevealSimple 0.5s ease-out forwards;
+}
+@keyframes charRevealSimple {
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* Golden sparkle burst following each character */
 .heading-sparkle {
   position: absolute;
